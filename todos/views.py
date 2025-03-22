@@ -2,10 +2,13 @@ from django.shortcuts import render, redirect
 from .models import Todo
 from django.views import View
 from django.contrib import messages
+from django.contrib.auth.models import User
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-class IndexView(View):
+class IndexView(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request):
-        todos = Todo.objects.all()
+        todos = Todo.objects.filter(actor=request.user)
         return render(request, "index.html", {'todos': todos})
     def post(self, request):
         title = request.POST.get('title')
@@ -17,7 +20,8 @@ class IndexView(View):
             messages.error(request, message="Title and Content required")
         
         else:
-            Todo.objects.create(title=title, content=content)
+           # user = User.objects # anon  / user context
+            Todo.objects.create(title=title, content=content, actor=request.user)
 
         #print(f"Judul: {title}, Content: {content}")
         return redirect('index')
